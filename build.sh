@@ -2,13 +2,18 @@
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Config defaults (override via env or flags)
 image_name="${IMAGE_NAME:-pyinstaller-example}"
 tag="${TAG:-latest}"
 entry="${ENTRYPOINT:-app.py}"
 spec_file="${SPEC_FILE:-}"
 requirements_file="${REQUIREMENTS_FILE:-requirements.txt}"
+dist_dir="${DIST_DIR:-${script_dir}/dist}"
+dockerfile_path="${DOCKERFILE_PATH:-${script_dir}/Dockerfile}"
+container_src="/tmp/src"
+container_dist="/tmp/dist"
+container_build="/tmp/build"
 stamp="${STAMP:-$(date -u +%Y%m%d-%H%M)}" # UTC
-dist_dir="${script_dir}/dist"
 
 usage() {
   cat <<EOF
@@ -18,8 +23,10 @@ Usage: $0 [options]
   --requirements FILE  Requirements file to install before building (default: requirements.txt)
   --image NAME         Docker image name (default: pyinstaller-example)
   --tag TAG            Docker image tag (default: latest)
+  --dist DIR           Host dist output directory (default: ./dist next to this script)
+  --dockerfile FILE    Dockerfile to build (default: ./Dockerfile next to this script)
   -h, --help           Show this help
-Environment overrides: ENTRYPOINT, SPEC_FILE, REQUIREMENTS_FILE, IMAGE_NAME, TAG, STAMP
+Environment overrides: ENTRYPOINT, SPEC_FILE, REQUIREMENTS_FILE, IMAGE_NAME, TAG, DIST_DIR, DOCKERFILE_PATH, STAMP
 EOF
 }
 
@@ -30,6 +37,8 @@ while [[ $# -gt 0 ]]; do
     --requirements) requirements_file="${2:-$requirements_file}"; shift ;;
     --image) image_name="${2:-$image_name}"; shift ;;
     --tag) tag="${2:-$tag}"; shift ;;
+    --dist) dist_dir="${2:-$dist_dir}"; shift ;;
+    --dockerfile) dockerfile_path="${2:-$dockerfile_path}"; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "[!] Unknown option: $1" >&2; usage; exit 1 ;;
   esac
@@ -39,7 +48,7 @@ done
 mkdir -p "${dist_dir}"
 
 echo "[+] Building Docker image ${image_name}:${tag}..."
-docker build -t "${image_name}:${tag}" "${script_dir}"
+docker build -f "${dockerfile_path}" -t "${image_name}:${tag}" "${script_dir}"
 docker tag "${image_name}:${tag}" "${image_name}:${tag}-${stamp}"
 echo "[i] Additional tag: ${image_name}:${tag}-${stamp}"
 
@@ -54,8 +63,8 @@ docker run --rm \
   -v "${dist_dir}:/out" \
   "${image_name}:${tag}" \
   bash -lc 'set -euo pipefail
-    cp -r /src /tmp/src
-    cd /tmp/src
+    cp -r /src '"${container_src}"'
+    cd '"${container_src}"'
 
     if [[ -n "${REQUIREMENTS_FILE:-}" && -f "${REQUIREMENTS_FILE}" ]]; then
       echo "[i] Installing requirements from ${REQUIREMENTS_FILE}"
@@ -89,14 +98,14 @@ PY
         exit 1
       fi
       echo "[i] Using spec file ${SPEC_FILE}"
-      python -m PyInstaller --clean "${SPEC_FILE}" --distpath /tmp/dist --workpath /tmp/build --specpath /tmp
+      python -m PyInstaller --clean "${SPEC_FILE}" --distpath '"${container_dist}"' --workpath '"${container_build}"' --specpath /tmp
     else
       echo "[i] Building onefile binary from ${ENTRYPOINT}"
-      python -m PyInstaller --clean --onefile "${ENTRYPOINT}" --distpath /tmp/dist --workpath /tmp/build --specpath /tmp
+      python -m PyInstaller --clean --onefile "${ENTRYPOINT}" --distpath '"${container_dist}"' --workpath '"${container_build}"' --specpath /tmp
     fi
 
     mkdir -p /out
-    cp -r /tmp/dist/* /out/
+    cp -r '"${container_dist}"'/* /out/
     echo "[+] Build complete. Files in /out:"
     ls -lh /out'
 

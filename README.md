@@ -27,9 +27,11 @@ Open the binary to verify it runs:
 - `--spec FILE` if you already have a PyInstaller spec file.
 - `--image NAME` to change the Docker image name (default: `pyinstaller-example`).
 - `--tag TAG` to change the image tag (default: `latest`).
+- `--dist DIR` to change the host output directory (default: `./dist` next to the script).
+- `--dockerfile FILE` to point at a different Dockerfile (default: `./Dockerfile`).
 - `--requirements FILE` to install dependencies before building (default: `requirements.txt` when present).
 
-You can also set environment variables instead of flags: `ENTRYPOINT`, `SPEC_FILE`, `IMAGE_NAME`, `TAG`, `REQUIREMENTS_FILE`, `STAMP`.
+You can also set environment variables instead of flags: `ENTRYPOINT`, `SPEC_FILE`, `IMAGE_NAME`, `TAG`, `DIST_DIR`, `DOCKERFILE_PATH`, `REQUIREMENTS_FILE`, `STAMP`.
 
 ## How it works
 1) `Dockerfile` uses Debian Jessie for broad glibc compatibility, rebuilds OpenSSL 1.0.2u, then compiles Python 3.8.x against it to restore working SSL, and finally installs PyInstaller.
