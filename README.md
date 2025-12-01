@@ -47,6 +47,22 @@ You can also set environment variables instead of flags: `ENTRYPOINT`, `SPEC_FIL
 - For multi-binary projects, run `./build.sh --entry other.py` (or provide multiple spec files) and collect the outputs in `dist/`.
 - Adjust the Dockerfile if you need older glibc compatibility or specific build deps.
 
+## Smoke test (optional)
+Run a quick end-to-end check:
+```bash
+./smoke-test.sh
+```
+This rebuilds the image if needed, builds the `hello_world.py` binary, runs it to confirm output, and checks that SSL works inside the container (`import ssl` shows the OpenSSL version).
+
+## Limitations and compatibility
+- Base image is Debian Jessie to hit an old glibc target. If you only care about newer distros, swap the base image and bump Python/OpenSSL accordingly.
+- Network is required the first time to download OpenSSL/Python sources.
+- PyInstaller is pinned to 5.13.2; adjust if you need features from newer releases, but test compatibility with your target glibc.
+- Native wheels with bundled `.libs` are supported via `LD_LIBRARY_PATH` auto-detection, but custom native dependencies may require extending the Dockerfile.
+
+## License
+A license file should be added before treating this as open source; choose MIT/BSD/Apache or similar to make reuse unambiguous.
+
 ## Why rebuild OpenSSL and Python here?
 - Jessie’s packaged OpenSSL is EOL and its SSL stack is effectively broken for modern HTTPS endpoints. Rebuilding OpenSSL 1.0.2u (still compatible with old glibc) fixes TLS so dependency downloads and runtime HTTPS calls work.
 - Python is compiled from source against that OpenSSL to ensure the interpreter’s ssl module is functional inside the container and in the produced binaries.
