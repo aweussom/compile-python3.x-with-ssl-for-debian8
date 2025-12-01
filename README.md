@@ -72,7 +72,7 @@ This rebuilds the image if needed, builds the `hello_world.py` binary, runs it t
 
 ## Versioning philosophy
 - Default versioning uses a build-date stamp: `STAMP` defaults to UTC `YYYYMMDD-HHMM` and is used for image tags, output naming, and .deb versions. For operations, a build timestamp is clearer than semantic versions (e.g., `1.0.1b`).
-- If you want Git-derived versions, run `./save_git_info.sh` before building; this writes `git_info.py` with `__version__`, `__branch__`, and `__commit__` from `git describe`/`rev-parse`, which you can import in your app or embed in the binary.
+- If you want Git-derived versions, run `./save_git_info.sh` before building; this writes `git_info.py` with `__version__`, `__branch__`, `__commit__`, plus metadata for provenance: `__build_source__` (local | github) and `__version_source__` (timestamp | tag | branch | api). Defaults use the timestamp unless a tag is detected; environment overrides are `BUILD_SOURCE` and `VERSION_SOURCE`.
 
 ## License
 A license file should be added before treating this as open source; choose MIT/BSD/Apache or similar to make reuse unambiguous.
