@@ -1,0 +1,16 @@
+# Build outputs
+dist/
+build/
+
+# PyInstaller specs
+*.spec
+
+# Python caches
+__pycache__/
+*.pyc
+
+# Virtualenvs
+.venv/
+
+# Wheel cache (if used)
+.wheels/
