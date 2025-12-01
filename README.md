@@ -1,5 +1,7 @@
 Minimal example showing how to compile a Python script into a standalone binary with PyInstaller inside Docker. This is a cleaned-up, reusable sample you can drop into any project. It uses Debian Jessie as the base and builds OpenSSL and Python from source to avoid the broken SSL in the stock distro.
 
+Created to solve OpenSSL compatibility issues when running modern Python tools on legacy Debian 8 infrastructure.
+
 ## What's inside
 - `Dockerfile` – reproducible builder image with Python and PyInstaller.
 - `build.sh` – helper that builds the image, runs PyInstaller in an isolated container, and writes binaries to `dist/`.
