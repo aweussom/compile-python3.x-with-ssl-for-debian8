@@ -5,6 +5,9 @@ Minimal example showing how to compile a Python script into a standalone binary 
 - `build.sh` – helper that builds the image, runs PyInstaller in an isolated container, and writes binaries to `dist/`.
 - `app.py` – tiny sample entrypoint; replace with your own application.
 - `hello_world.py` – even smaller smoke-test script to prove the toolchain works.
+- `requirements.txt` – where you pin dependencies for the build.
+- `package-debs.sh` – optional step to wrap the built binary into a .deb with a date-based version.
+- `save_git_info.sh` – optional helper to generate `git_info.py` from your current Git state.
 
 ## Quick start
 ```bash
@@ -33,6 +36,13 @@ Open the binary to verify it runs:
 
 You can also set environment variables instead of flags: `ENTRYPOINT`, `SPEC_FILE`, `IMAGE_NAME`, `TAG`, `DIST_DIR`, `DOCKERFILE_PATH`, `REQUIREMENTS_FILE`, `STAMP`.
 
+## Full flow (opinionated)
+1) Write code: put your entry script in the repo (e.g., `app.py`).
+2) Pin dependencies: update `requirements.txt` with exact versions.
+3) (Optional) Embed git metadata: run `./save_git_info.sh` to generate `git_info.py` so your binary knows its Git describe/branch/commit.
+4) Build the binary: `./build.sh --entry app.py` (or your entry). This pulls/builds the Docker image, compiles OpenSSL+Python, installs deps, and runs PyInstaller. The default version stamp is UTC `YYYYMMDD-HHMM`.
+5) Package as .deb (optional): `./package-debs.sh --binary dist/app --name my-app` to get `release/<STAMP>/my-app_<STAMP>_<ARCH>.deb`.
+
 ## How it works
 1) `Dockerfile` uses Debian Jessie for broad glibc compatibility, rebuilds OpenSSL 1.0.2u, then compiles Python 3.8.x against it to restore working SSL, and finally installs PyInstaller.
 2) `build.sh` builds the image, mounts your source tree read-only, and copies it to a temporary workspace inside the container.
@@ -59,6 +69,10 @@ This rebuilds the image if needed, builds the `hello_world.py` binary, runs it t
 - Network is required the first time to download OpenSSL/Python sources.
 - PyInstaller is pinned to 5.13.2; adjust if you need features from newer releases, but test compatibility with your target glibc.
 - Native wheels with bundled `.libs` are supported via `LD_LIBRARY_PATH` auto-detection, but custom native dependencies may require extending the Dockerfile.
+
+## Versioning philosophy
+- Default versioning uses a build-date stamp: `STAMP` defaults to UTC `YYYYMMDD-HHMM` and is used for image tags, output naming, and .deb versions. For operations, a build timestamp is clearer than semantic versions (e.g., `1.0.1b`).
+- If you want Git-derived versions, run `./save_git_info.sh` before building; this writes `git_info.py` with `__version__`, `__branch__`, and `__commit__` from `git describe`/`rev-parse`, which you can import in your app or embed in the binary.
 
 ## License
 A license file should be added before treating this as open source; choose MIT/BSD/Apache or similar to make reuse unambiguous.
