@@ -10,6 +10,8 @@ Created to solve OpenSSL compatibility issues when running modern Python tools o
 - `requirements.txt` – where you pin dependencies for the build.
 - `package-debs.sh` – optional step to wrap the built binary into a .deb with a date-based version.
 - `save_git_info.sh` – optional helper to generate `git_info.py` from your current Git state.
+- `PYTHON-FLASK-COMPILATION-HOWTO.md` – documentation on how to compile a more complicated app for distribution.
+
 
 ## Quick start
 ```bash
